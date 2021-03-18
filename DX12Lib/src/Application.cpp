@@ -497,7 +497,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             bool lButton = (wParam & MK_LBUTTON) != 0;
             bool rButton = (wParam & MK_RBUTTON) != 0;
             bool mButton = (wParam & MK_MBUTTON) != 0;
-            bool shift = (wParam & MK_SHIFT) != 0;
+            bool shift   = (wParam & MK_SHIFT)   != 0;
             bool control = (wParam & MK_CONTROL) != 0;
 
             int x = ((int)(short)LOWORD(lParam));
@@ -514,7 +514,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             bool lButton = (wParam & MK_LBUTTON) != 0;
             bool rButton = (wParam & MK_RBUTTON) != 0;
             bool mButton = (wParam & MK_MBUTTON) != 0;
-            bool shift = (wParam & MK_SHIFT) != 0;
+            bool shift   = (wParam & MK_SHIFT)   != 0;
             bool control = (wParam & MK_CONTROL) != 0;
 
             int x = ((int)(short)LOWORD(lParam));
@@ -535,7 +535,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             bool lButton = (keyStates & MK_LBUTTON) != 0;
             bool rButton = (keyStates & MK_RBUTTON) != 0;
             bool mButton = (keyStates & MK_MBUTTON) != 0;
-            bool shift = (keyStates & MK_SHIFT) != 0;
+            bool shift   = (keyStates & MK_SHIFT)   != 0;
             bool control = (keyStates & MK_CONTROL) != 0;
 
             int x = ((int)(short)LOWORD(lParam));
