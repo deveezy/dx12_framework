@@ -297,7 +297,7 @@ int Application::Run(std::shared_ptr<Game> pGame)
 
 void Application::Quit(int exitCode)
 {
-    PostQuitMessage(exiteCode);
+    PostQuitMessage(exitCode);
 }
 
 Microsoft::WRL::ComPtr<ID3D12Device2> Application::GetDevice() const 

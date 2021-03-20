@@ -13,6 +13,7 @@ set( SHADER_FILES
     shaders/VertexShader.hlsl
     shaders/PixelShader.hlsl
 )
+
 source_group( "Resources\\Shaders" FILES ${SHADER_FILES} )
 
 set_source_files_properties( shaders/VertexShader.hlsl PROPERTIES 

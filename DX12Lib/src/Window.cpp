@@ -56,7 +56,7 @@ void Window::Hide()
 
 void Window::Destroy() 
 {
-    if (std::shared_ptr pGame = m_pGame.lock())
+    if (std::shared_ptr<Game> pGame = m_pGame.lock())
     {
         // Notify the registered game that the window is being destroyed.
         pGame->OnWindowDestroy();
@@ -165,6 +165,17 @@ void Window::OnUpdate(UpdateEventArgs&)
         m_FrameCounter++;
         UpdateEventArgs updateEventArgs(m_UpdateClock.GetDeltaSeconds(), m_UpdateClock.GetTotalSeconds());
         pGame->OnUpdate(updateEventArgs);
+    }
+}
+
+void Window::OnRender(RenderEventArgs&)
+{
+    m_RenderClock.Tick();
+
+    if (auto pGame = m_pGame.lock())
+    {
+        RenderEventArgs renderEventArgs(m_RenderClock.GetDeltaSeconds(), m_RenderClock.GetTotalSeconds());
+        pGame->OnRender(renderEventArgs);
     }
 }
 

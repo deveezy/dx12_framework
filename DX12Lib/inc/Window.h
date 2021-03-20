@@ -40,7 +40,7 @@ public:
      * Should this window be rendered with vertical refresh synchronization. 
     */
     bool IsVSync() const;
-    void SetVSync();
+    void SetVSync(bool vSync);
     void ToggleVSync();
 
     /**
