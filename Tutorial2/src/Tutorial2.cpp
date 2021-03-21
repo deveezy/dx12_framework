@@ -3,6 +3,7 @@
 #include <CommandQueue.h>
 #include <Window.h>
 #include <Utility.h>
+#include <cstdint>
 
 #include <wrl.h>
 using namespace Microsoft::WRL;
@@ -18,7 +19,7 @@ struct Vertex
     XMFLOAT3 Color;
 };
 
-static VertexPosColor g_Vertices[8] = 
+static Vertex g_Vertices[8] = 
 {
     { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f) }, // 0
     { XMFLOAT3(-1.0f,  1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) }, // 1
@@ -99,7 +100,7 @@ bool Demo::LoadContent()
     // Create the vertex buffer view.
     m_VertexBufferView.BufferLocation = m_VertexBuffer->GetGPUVirtualAddress();
     m_VertexBufferView.SizeInBytes = sizeof(g_Vertices);
-    m_VertexBufferView.StrideInBytes = sizeof(VertexPosColor);
+    m_VertexBufferView.StrideInBytes = sizeof(Vertex);
 
     // Upload index buffer.
     ComPtr<ID3D12Resource> intermediateIndexBuffer;
@@ -168,5 +169,248 @@ bool Demo::LoadContent()
     // Create the root signature.
     ThrowIfFailed(device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(),
         rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&m_RootSignature)));
+
+    struct PipelineStateStream
+    {
+        CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE pRootSignature;
+        CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
+        CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
+        CD3DX12_PIPELINE_STATE_STREAM_VS VS;
+        CD3DX12_PIPELINE_STATE_STREAM_PS PS;
+        CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
+        CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
+    } pipelineStateStream;
+
+    D3D12_RT_FORMAT_ARRAY rtvFormats = {};
+    rtvFormats.NumRenderTargets = 1;
+    rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+    pipelineStateStream.pRootSignature = m_RootSignature.Get();
+    pipelineStateStream.InputLayout = { inputLayout, _countof(inputLayout) };
+    pipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());
+    pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(pixelShaderBlob.Get());
+    pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+    pipelineStateStream.RTVFormats = rtvFormats;
+
+    D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = 
+    {
+        sizeof(PipelineStateStream), &pipelineStateStream
+    };
+
+    ThrowIfFailed(device->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&m_PipelineState)));
+
+    std::uint64_t fenceValue = commandQueue->ExecuteCommandList(commandList);
+    commandQueue->WaitForFenceValue(fenceValue);
+
+    m_ContentLoaded = true;
+
+    ResizeDepthBuffer(GetClientWidth(), GetClientHeight());
+
+    return true;
 }
 
+void Demo::UnloadContent()
+{
+    m_ContentLoaded = false;
+}
+
+void Demo::ResizeDepthBuffer(int width, int height) 
+{
+    if (m_ContentLoaded)
+    {
+        // Flush any GPU commands that might be referencing the depth buffer.
+        Application::Get().Flush();
+
+        width  = std::max(1, width);
+        height = std::max(1, height);
+
+        ComPtr<ID3D12Device2> device = Application::Get().GetDevice();
+
+        // Resize screen dependent resources.
+        // Create a depth buffer.
+        D3D12_CLEAR_VALUE optimizedClearValue = {};
+        optimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        optimizedClearValue.DepthStencil  = { 1.f, 0 };
+
+        ThrowIfFailed(device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height,
+                1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+            D3D12_RESOURCE_STATE_DEPTH_WRITE, 
+            &optimizedClearValue,
+            IID_PPV_ARGS(&m_DepthBuffer)
+        ));
+
+        // Update the depth-stencil view.
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsv = {};
+        dsv.Format = DXGI_FORMAT_D32_FLOAT;
+        dsv.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        dsv.Texture2D.MipSlice = 0;
+        dsv.Flags = D3D12_DSV_FLAG_NONE;
+
+        device->CreateDepthStencilView(m_DepthBuffer.Get(), &dsv, m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
+    }
+}
+
+void Demo::OnResize(ResizeEventArgs& e) 
+{
+    if (e.Width != GetClientWidth() || e.Height != GetClientWidth())
+    {
+        super::OnResize(e);
+        m_Viewport = CD3DX12_VIEWPORT(.0f, .0f, (float)e.Width, (float)e.Height);
+        ResizeDepthBuffer(e.Width, e.Height);
+    }
+}
+
+void Demo::OnUpdate(UpdateEventArgs& e) 
+{
+    static uint64_t frameCount = 0;
+    static double totalTime = .0;
+
+    super::OnUpdate(e);
+
+    totalTime += e.ElapsedTime;
+    ++frameCount;
+
+    if (totalTime > 1.)
+    {
+        const double fps = frameCount / totalTime;
+
+        char buffer[512];
+        sprintf_s(buffer, "FPS: %f\n", fps);
+        OutputDebugStringA(buffer);
+
+        frameCount = 0;
+        totalTime = .0;
+    }
+
+    // Upload the model matrix.
+    float angle = (float)(e.TotalTime * 90.f);
+    const XMVECTOR rotationAxis = XMVectorSet(0.f, 1.f, 1.f, 0.f);
+    m_ModelMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(angle));
+
+    // Update the view matrix.
+    const XMVECTOR eyePosition = XMVectorSet(0.f, 0.f, -10.f, 1.f);
+    const XMVECTOR focusPoint  = XMVectorSet(0.f, 0.f, 0.f, 1.f);
+    const XMVECTOR upDirection = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+    m_ViewMatrix = XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
+
+    // Update the projection matrix.
+    float aspectRatio = GetClientWidth() / (float)GetClientHeight();
+    m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_FoV), aspectRatio, .1f, 100.f);
+}
+
+// Transition resource
+void Demo::TransitionResource(
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList, 
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource,
+    D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState) 
+{
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        resource.Get(),
+        beforeState, afterState);
+ 
+    commandList->ResourceBarrier(1, &barrier);   
+}
+
+// Clear a render target.
+void Demo::ClearRTV(
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv, FLOAT* clearColor)
+{
+    commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
+}
+
+void Demo::ClearDepth(
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
+    D3D12_CPU_DESCRIPTOR_HANDLE dsv, FLOAT depth)
+{
+    commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
+}
+
+void Demo::OnRender(RenderEventArgs& e)
+{
+    super::OnRender(e);
+
+    std::shared_ptr<CommandQueue> commandQueue = Application::Get().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = commandQueue->GetCommandList();
+    UINT currentBackBufferIndex = m_pWindow->GetCurrentBackBufferIndex();
+    Microsoft::WRL::ComPtr<ID3D12Resource> backBuffer = m_pWindow->GetCurrentBackBuffer();
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv = m_pWindow->GetCurrentRenderTargetView();
+    D3D12_CPU_DESCRIPTOR_HANDLE dsv = m_DSVHeap->GetCPUDescriptorHandleForHeapStart();
+
+    // Clear the render targets.
+    {
+        TransitionResource(commandList, backBuffer,
+            D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+        FLOAT clearColor[] = { 0.4f, 0.6f, 0.9f, 1.0f };
+
+        ClearRTV(commandList, rtv, clearColor);
+        ClearDepth(commandList, dsv);
+    }
+
+    commandList->SetPipelineState(m_PipelineState.Get());
+    commandList->SetGraphicsRootSignature(m_RootSignature.Get());
+
+    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    commandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
+    commandList->IASetIndexBuffer(&m_IndexBufferView);
+
+    commandList->RSSetViewports(1, &m_Viewport);
+    commandList->RSSetScissorRects(1, &m_ScissorRect);
+
+    commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
+
+    // Update the MVP matrix
+    XMMATRIX mvpMatrix = XMMatrixMultiply(m_ModelMatrix, m_ViewMatrix);
+    mvpMatrix = XMMatrixMultiply(mvpMatrix, m_ProjectionMatrix);
+    commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
+
+    commandList->DrawIndexedInstanced(_countof(g_Indicies), 1, 0, 0, 0);
+    // Present
+    {
+        TransitionResource(commandList, backBuffer,
+            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+
+        m_FenceValues[currentBackBufferIndex] = commandQueue->ExecuteCommandList(commandList);
+
+        currentBackBufferIndex = m_pWindow->Present();
+
+        commandQueue->WaitForFenceValue(m_FenceValues[currentBackBufferIndex]);
+    }
+}
+
+void Demo::OnKeyPressed(KeyEventArgs& e)
+{
+    super::OnKeyPressed(e);
+ 
+    switch (e.Key)
+    {
+        case KeyCode::Escape:
+            Application::Get().Quit(0);
+            break;
+        case KeyCode::Enter:
+            if (e.Alt)
+            {
+                case KeyCode::F11:
+                m_pWindow->ToggleFullscreen();
+                break;
+            }
+        case KeyCode::V:
+            m_pWindow->ToggleVSync();
+            break;
+    }
+}
+
+void Demo::OnMouseWheel(MouseWheelEventArgs& e)
+{
+    m_FoV -= e.WheelDelta;
+    m_FoV = std::clamp(m_FoV, 12.0f, 90.0f);
+ 
+    char buffer[256];
+    sprintf_s(buffer, "FoV: %f\n", m_FoV);
+    OutputDebugStringA(buffer);
+}

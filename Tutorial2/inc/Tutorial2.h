@@ -3,6 +3,7 @@
 #include <Game.h>
 #include <Window.h>
 #include <DirectXMath.h>
+#include <Utility.h>
 
 class Demo : public Game
 {
@@ -99,3 +100,8 @@ private:
 
     bool m_ContentLoaded;
 };
+
+
+
+
+

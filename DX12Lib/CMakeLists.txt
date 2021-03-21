@@ -1,5 +1,5 @@
 cmake_minimum_required( VERSION 3.10.1 ) 
-
+set(CMAKE_CXX_STANDARD 17)
 set( HEADER_FILES 
     inc/DX12LibPCH.h
     inc/Application.h

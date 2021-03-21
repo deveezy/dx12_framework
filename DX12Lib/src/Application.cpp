@@ -155,7 +155,7 @@ Microsoft::WRL::ComPtr<ID3D12Device2> Application::CreateDevice(Microsoft::WRL::
     ComPtr<ID3D12Device2> d3d12Device2;
     ThrowIfFailed(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&d3d12Device2)));
         // Enable debug messages in debug mode.
-#if defined(_DEBUG)
+#if defined(_DEBUG) || defined(DEBUG)
     ComPtr<ID3D12InfoQueue> pInfoQueue;
     if (SUCCEEDED(d3d12Device2.As(&pInfoQueue)))
     {

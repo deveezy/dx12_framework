@@ -110,7 +110,7 @@ void Window::SetFullscreen(bool fullscreen)
             // when switching out of fullscreen state.
             ::GetWindowRect(m_hWnd, &m_WindowRect);
 
-            // Set the window styly to a bordless window so the client are fills
+            // Set the window style to a bordless window so the client are fills
             // the entire screen.
             UINT windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
             ::SetWindowLongW(m_hWnd, GWL_STYLE, windowStyle);
@@ -133,6 +133,10 @@ void Window::SetFullscreen(bool fullscreen)
         }
         else
         {
+
+            // Restore all the window decorators.
+            ::SetWindowLong(m_hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
+
             // Restore all the window decorators.
             ::SetWindowPos(m_hWnd, HWND_NOTOPMOST,
                 m_WindowRect.left,
@@ -183,7 +187,7 @@ void Window::OnKeyPressed(KeyEventArgs& e)
 {
     if (auto pGame = m_pGame.lock())
     {
-        pGame->OnKeyReleased(e);
+        pGame->OnKeyPressed(e);
     }
 }
 

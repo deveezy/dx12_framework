@@ -3,7 +3,7 @@ cmake_minimum_required( VERSION 3.10.1 ) # Latest version of CMake when this fil
 set( HEADER_FILES
     inc/Tutorial2.h
 )
-
+set(CMAKE_CXX_STANDARD 17)
 set( SRC_FILES
     src/main.cpp
     src/Tutorial2.cpp

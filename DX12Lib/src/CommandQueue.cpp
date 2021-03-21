@@ -40,6 +40,7 @@ void CommandQueue::WaitForFenceValue(uint64_t fenceValue)
 {
     if (!IsFenceComplete(fenceValue))
     {
+        OutputDebugString("wait\n");
         m_d3d12Fence->SetEventOnCompletion(fenceValue, m_FenceEvent);
         ::WaitForSingleObject(m_FenceEvent, DWORD_MAX);
     }
