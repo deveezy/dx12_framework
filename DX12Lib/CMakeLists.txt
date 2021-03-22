@@ -1,4 +1,5 @@
 cmake_minimum_required( VERSION 3.10.1 ) 
+
 set(CMAKE_CXX_STANDARD 17)
 set( HEADER_FILES 
     inc/DX12LibPCH.h
@@ -12,6 +13,10 @@ set( HEADER_FILES
     inc/d3dx12.h
     inc/KeyCodes.h
     inc/Events.h
+    inc/UploadBuffer.h
+    inc/Defines.h
+    inc/DescriptorAllocator.h
+    inc/DescriptorAllocatorPage.h
 )
 
 
@@ -23,6 +28,9 @@ set( SOURCE_FILES
     src/HighResolutionClock.cpp
     src/Window.cpp
     src/Utility.cpp
+    src/UploadBuffer.cpp
+    src/DescriptorAllocator.cpp
+    src/DescriptorAllocatorPage.cpp
 )
 
 set( RESOURCE_FILES 
