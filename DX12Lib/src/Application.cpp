@@ -1,7 +1,8 @@
-#include <Application.h>
+#include "../inc/Application.h"
 
 #include <DX12LibPCH.h>
-#include <../resource.h> 
+
+#include <DX12LibPCH.h>
 
 #include <Game.h>
 #include <CommandQueue.h>
@@ -54,11 +55,11 @@ Application::Application(HINSTANCE hInst)
     wndClass.lpfnWndProc = &WndProc;
     wndClass.hInstance = m_hInstance;
     wndClass.hCursor   = LoadCursor(nullptr, IDC_ARROW);
-    wndClass.hIcon = LoadIcon(m_hInstance, MAKEINTRESOURCE(APP_ICON));
+    wndClass.hIcon = LoadIcon(m_hInstance, nullptr);
     wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndClass.lpszMenuName = nullptr;
     wndClass.lpszClassName = WINDOW_CLASS_NAME;
-    wndClass.hIconSm = LoadIcon(m_hInstance, MAKEINTRESOURCE(APP_ICON));
+    wndClass.hIconSm = LoadIcon(m_hInstance, nullptr);
 
     if (!RegisterClassExW(&wndClass))
     {

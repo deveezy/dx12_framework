@@ -59,15 +59,13 @@ UploadBuffer::Page::Page(size_t sizeInBytes)
     , m_GPUPtr(D3D12_GPU_VIRTUAL_ADDRESS(0))
 {
     Microsoft::WRL::ComPtr<ID3D12Device2> device = Application::Get().GetDevice();
+    auto uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(m_PageSize);
     ThrowIfFailed(device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-        D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(m_PageSize),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&m_d3d12Resource)
-    ));
- 
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(m_PageSize),
+        D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+        IID_PPV_ARGS(&m_d3d12Resource)));
+
     m_GPUPtr = m_d3d12Resource->GetGPUVirtualAddress();
     m_d3d12Resource->Map(0, nullptr, &m_CPUPtr);
 }

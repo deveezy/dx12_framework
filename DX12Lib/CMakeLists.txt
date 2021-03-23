@@ -1,6 +1,5 @@
 cmake_minimum_required( VERSION 3.10.1 ) 
 
-set(CMAKE_CXX_STANDARD 17)
 set( HEADER_FILES 
     inc/DX12LibPCH.h
     inc/Application.h
@@ -17,8 +16,8 @@ set( HEADER_FILES
     inc/Defines.h
     inc/DescriptorAllocator.h
     inc/DescriptorAllocatorPage.h
+    inc/DescriptorAllocation.h
 )
-
 
 set( SOURCE_FILES
     src/DX12LibPCH.cpp
@@ -31,23 +30,12 @@ set( SOURCE_FILES
     src/UploadBuffer.cpp
     src/DescriptorAllocator.cpp
     src/DescriptorAllocatorPage.cpp
+    src/DescriptorAllocation.cpp
 )
-
-set( RESOURCE_FILES 
-    DX12Lib.rc
-    Resources/Icon/app_icon.ico
-)
-
-source_group( "Resources" FILES DX12Lib.rc )
-source_group( "Resources\\Icon" FILES Resources/Icon/app_icon.ico )
 
 add_library( DX12Lib STATIC
     ${HEADER_FILES}
-    ${SOURCE_FILES}
-    ${RESOURCE_FILES})
-
-include_directories(DX12Lib/)
-include_directories(DX12Lib/inc/)
+    ${SOURCE_FILES})
 
 target_include_directories( DX12Lib PUBLIC inc)
 
@@ -55,5 +43,4 @@ target_link_libraries( DX12Lib
     PUBLIC d3d12.lib
     PUBLIC dxgi.lib
     PUBLIC dxguid.lib
-    PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/DX12Lib.dir/${CMAKE_CFG_INTDIR}/DX12Lib.res # This is the only way I could figure out how to link the compiled resource file.
 )

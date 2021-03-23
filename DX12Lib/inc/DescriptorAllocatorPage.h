@@ -1,11 +1,14 @@
+#pragma once
+
 #include <DescriptorAllocation.h>
 
-#include <d3d12.h>
+#include <d3dx12.h>
 
 #include <wrl.h>
 #include <map>
 #include <memory>
 #include <queue>
+#include <mutex>
 
 class DescriptorAllocatorPage : public std::enable_shared_from_this<DescriptorAllocatorPage>
 {
