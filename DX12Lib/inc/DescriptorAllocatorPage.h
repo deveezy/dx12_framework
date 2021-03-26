@@ -116,6 +116,3 @@ private:
 
     std::mutex m_AllocationMutex;
 };
-
-
-

@@ -17,6 +17,9 @@ set( HEADER_FILES
     inc/DescriptorAllocator.h
     inc/DescriptorAllocatorPage.h
     inc/DescriptorAllocation.h
+    inc/DynamicDescriptorHeap.h
+    inc/RootSignature.h
+    inc/CommandList.h
 )
 
 set( SOURCE_FILES
@@ -31,6 +34,9 @@ set( SOURCE_FILES
     src/DescriptorAllocator.cpp
     src/DescriptorAllocatorPage.cpp
     src/DescriptorAllocation.cpp
+    src/DynamicDescriptorHeap.cpp
+    src/RootSignature.cpp
+    src/CommandList.cpp
 )
 
 add_library( DX12Lib STATIC

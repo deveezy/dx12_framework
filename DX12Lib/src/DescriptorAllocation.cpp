@@ -4,6 +4,7 @@
 
 #include <Application.h>
 #include <DescriptorAllocatorPage.h>
+#include <cassert>
 
 DescriptorAllocation::DescriptorAllocation()
     : m_Descriptor{ 0 }
@@ -12,7 +13,10 @@ DescriptorAllocation::DescriptorAllocation()
     , m_Page( nullptr )
 {}
 
-DescriptorAllocation::DescriptorAllocation( D3D12_CPU_DESCRIPTOR_HANDLE descriptor, uint32_t numHandles, uint32_t descriptorSize, std::shared_ptr<DescriptorAllocatorPage> page )
+DescriptorAllocation::DescriptorAllocation( 
+    D3D12_CPU_DESCRIPTOR_HANDLE descriptor, 
+    uint32_t numHandles, uint32_t descriptorSize, 
+    std::shared_ptr<DescriptorAllocatorPage> page )
     : m_Descriptor( descriptor )
     , m_NumHandles( numHandles )
     , m_DescriptorSize( descriptorSize )
@@ -57,7 +61,7 @@ void DescriptorAllocation::Free()
 {
     if ( !IsNull() && m_Page )
     {
-        m_Page->Free( std::move( *this ), Application::GetFrameCount() );
+        m_Page->Free( std::move( *this ), Application::GetFrameCount() ); // push to stale descs queue.
         
         m_Descriptor.ptr = 0;
         m_NumHandles = 0;

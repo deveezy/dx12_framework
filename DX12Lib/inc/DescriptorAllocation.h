@@ -13,7 +13,11 @@ public:
     // Creates a NULL descriptor.
     DescriptorAllocation();
 
-    DescriptorAllocation( D3D12_CPU_DESCRIPTOR_HANDLE descriptor, uint32_t numHandles, uint32_t descriptorSize, std::shared_ptr<DescriptorAllocatorPage> page );
+    DescriptorAllocation( 
+        D3D12_CPU_DESCRIPTOR_HANDLE descriptor, 
+        uint32_t numHandles,
+        uint32_t descriptorSize, 
+        std::shared_ptr<DescriptorAllocatorPage> page );
 
     // The destructor will automatically free the allocation.
     ~DescriptorAllocation();
