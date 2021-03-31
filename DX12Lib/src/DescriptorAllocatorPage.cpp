@@ -54,7 +54,7 @@ DescriptorAllocation DescriptorAllocatorPage::Allocate(uint32_t numDescriptors)
 
     // There are less requsted number of descriptors left in the heap.
     // Return a NULL descriptor and try another heap.
-    if ( numDescriptors > m_NumDescriptorsInHeap)
+    if ( numDescriptors > m_NumDescriptorsInHeap )
     {
         return DescriptorAllocation();
     }
@@ -187,7 +187,7 @@ void DescriptorAllocatorPage::ReleaseStaleDescriptors(uint64_t frameNumber)
 
     while (!m_StaleDescriptors.empty())
     {
-        StaleDescriptorInfo &staleDescriptor = m_StaleDescriptors.front();
+        StaleDescriptorInfo& staleDescriptor = m_StaleDescriptors.front();
 
         // The offset of the descriptor in the heap.
         uint32_t offset = staleDescriptor.Offset;

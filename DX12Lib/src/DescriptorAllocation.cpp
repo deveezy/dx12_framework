@@ -61,7 +61,7 @@ void DescriptorAllocation::Free()
 {
     if ( !IsNull() && m_Page )
     {
-        m_Page->Free( std::move( *this ), Application::GetFrameCount() ); // push to stale descs queue.
+        m_Page->Free( std::move( *this ), Application::GetFrameCount() ); // push to stale descriptors queue.
         
         m_Descriptor.ptr = 0;
         m_NumHandles = 0;

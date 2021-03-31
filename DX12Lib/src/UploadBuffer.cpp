@@ -2,8 +2,9 @@
 #include <Application.h>
 #include <DX12LibPCH.h>
 
-UploadBuffer::UploadBuffer(size_t pageSize)
-    : m_PageSize(pageSize) {}
+using Microsoft::WRL::ComPtr;
+
+UploadBuffer::UploadBuffer(size_t pageSize) : m_PageSize(pageSize) {}
 
 UploadBuffer::~UploadBuffer() {}
 
@@ -45,7 +46,7 @@ void UploadBuffer::Reset()
 
     // Reset all available pages.
     m_AvailablePages = m_PagePool;
-    for (auto page : m_AvailablePages)
+    for (std::shared_ptr<Page> page : m_AvailablePages) 
     {
         // Reset the page for new allocations.
         page->Reset();
@@ -58,11 +59,15 @@ UploadBuffer::Page::Page(size_t sizeInBytes)
     , m_CPUPtr(nullptr)
     , m_GPUPtr(D3D12_GPU_VIRTUAL_ADDRESS(0))
 {
-    Microsoft::WRL::ComPtr<ID3D12Device2> device = Application::Get().GetDevice();
-    auto uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(m_PageSize);
+    ComPtr<ID3D12Device2> device = Application::Get().GetDevice();
+    CD3DX12_HEAP_PROPERTIES uploadHeapProps =
+        CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+
+    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(m_PageSize);
+
     ThrowIfFailed(device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(m_PageSize),
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(m_PageSize),
         D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
         IID_PPV_ARGS(&m_d3d12Resource)));
 
@@ -99,7 +104,6 @@ UploadBuffer::Allocation UploadBuffer::Page::Allocate(size_t sizeInBytes, size_t
     return allocation;
 }
 
-void UploadBuffer::Page::Reset() 
-{
-    m_Offset = 0;
-}
+void UploadBuffer::Page::Reset() { m_Offset = 0; }
+
+size_t UploadBuffer::GetPageSize() const { return m_PageSize; }

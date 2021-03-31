@@ -21,12 +21,13 @@ public:
      * @param pageSize The size to use to allocate new pages in GPU memory.
      */
     explicit UploadBuffer(size_t pageSize = _2MB);
+
     virtual ~UploadBuffer();
 
     /**
      * The maximum size of an allocation is the size of a single page.
      */
-    size_t GetPageSize() const { return m_PageSize;  }
+    size_t GetPageSize() const;
 
     /**
      * Allocate memory in an Upload heap.
